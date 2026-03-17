@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>0J0 de T0GA</title>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #e0e0e0;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #00d4ff;
+            margin-bottom: 30px;
+            text-shadow: 0 0 20px rgba(0, 212, 255, 0.5), 0 0 40px rgba(0, 212, 255, 0.3);
+            font-size: 42px;
+            font-weight: 700;
+            letter-spacing: 2px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #a0a0a0;
+            margin-bottom: 40px;
+            font-size: 14px;
+            letter-spacing: 1px;
+        }
+        
+        .main-grid {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 900px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .video-container {
+            background: rgba(30, 30, 46, 0.8);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+        }
+        
+        .video-wrapper {
+            position: relative;
+            background: #000;
+            border-radius: 10px;
+            overflow: hidden;
+            aspect-ratio: 4/3;
+        }
+        
+        #videoStream {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        .video-placeholder {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #666;
+            text-align: center;
+        }
+        
+        .stats-bar {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .stat {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #00d4ff;
+            text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #888;
+            text-transform: uppercase;
+        }
+        
+        .controls-panel {
+            background: rgba(30, 30, 46, 0.8);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            height: fit-content;
+            backdrop-filter: blur(10px);
+        }
+        
+        .control-group {
+            margin-bottom: 25px;
+        }
+        
+        .control-label {
+            display: block;
+            font-weight: 600;
+            color: #e0e0e0;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .control-value {
+            display: inline-block;
+            background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+            color: white;
+            padding: 2px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            margin-left: 10px;
+            box-shadow: 0 2px 8px rgba(0, 212, 255, 0.4);
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: #2a2a3e;
+            outline: none;
+            -webkit-appearance: none;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+        }
+        
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+        }
+        
+        input[type="text"], select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid rgba(0, 212, 255, 0.2);
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+            background: rgba(20, 20, 35, 0.6);
+            color: #e0e0e0;
+        }
+        
+        input[type="text"]:focus, select:focus {
+            outline: none;
+            border-color: #00d4ff;
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+        }
+        
+        select option {
+            background: #1a1a2e;
+            color: #e0e0e0;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        button {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-start {
+            background: linear-gradient(135deg, #00d4aa 0%, #00b894 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(0, 212, 170, 0.3);
+        }
+        
+        .btn-start:hover {
+            background: linear-gradient(135deg, #00f5c4 0%, #00d4aa 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 212, 170, 0.5);
+        }
+        
+        .btn-start:disabled {
+            background: #2a2a3e;
+            color: #666;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .btn-stop {
+            background: linear-gradient(135deg, #ff4757 0%, #ee5a24 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(255, 71, 87, 0.3);
+        }
+        
+        .btn-stop:hover {
+            background: linear-gradient(135deg, #ff6b7a 0%, #ff4757 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 71, 87, 0.5);
+        }
+        
+        .btn-stop:disabled {
+            background: #2a2a3e;
+            color: #666;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .status-bar {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 500;
+            border: 1px solid;
+        }
+        
+        .status-connected {
+            background: rgba(0, 212, 170, 0.1);
+            color: #00d4aa;
+            border-color: rgba(0, 212, 170, 0.3);
+            box-shadow: 0 0 15px rgba(0, 212, 170, 0.2);
+        }
+        
+        .status-disconnected {
+            background: rgba(255, 71, 87, 0.1);
+            color: #ff4757;
+            border-color: rgba(255, 71, 87, 0.3);
+            box-shadow: 0 0 15px rgba(255, 71, 87, 0.2);
+        }
+        
+        .status-running {
+            background: rgba(0, 212, 255, 0.1);
+            color: #00d4ff;
+            border-color: rgba(0, 212, 255, 0.3);
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.2);
+        }
+        
+        .info-box {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 212, 255, 0.1);
+            border-left: 4px solid #00d4ff;
+            border-radius: 0 8px 8px 0;
+            font-size: 14px;
+            color: #e0e0e0;
+        }
+        
+        h2 {
+            color: #e0e0e0;
+            margin-bottom: 20px;
+            font-size: 20px;
+            text-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+        }
+        
+        h3 {
+            color: #00d4ff;
+            margin-bottom: 15px;
+            font-size: 16px;
+            border-bottom: 2px solid rgba(0, 212, 255, 0.5);
+            padding-bottom: 5px;
+            text-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+        }
+
+        .saved-cameras {
+            margin-top: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            max-width: 100%;
+        }
+
+        .camera-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .camera-item:hover {
+            background: rgba(0, 212, 255, 0.2);
+            border-color: rgba(0, 212, 255, 0.4);
+        }
+
+        .camera-info {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .camera-name {
+            font-weight: 600;
+            color: #00d4ff;
+            font-size: 14px;
+            margin-bottom: 2px;
+        }
+
+        .camera-url {
+            font-size: 11px;
+            color: #888;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .camera-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-load {
+            background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .btn-load:hover {
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+        }
+
+        .btn-delete {
+            background: rgba(255, 71, 87, 0.2);
+            color: #ff4757;
+            border: 1px solid rgba(255, 71, 87, 0.3);
+            padding: 6px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .btn-delete:hover {
+            background: rgba(255, 71, 87, 0.4);
+        }
+
+        .btn-save:hover {
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            transform: translateY(-2px);
+        }
+
+        /* Toggle switch styles */
+        .toggle-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #e0e0e0;
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #2a2a3e;
+            transition: .3s;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 2px;
+            background-color: #888;
+            transition: .3s;
+        }
+
+        input:checked + .slider {
+            background-color: rgba(0, 212, 255, 0.2);
+            border-color: rgba(0, 212, 255, 0.5);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+            background-color: #00d4ff;
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+        }
+
+        .slider.round {
+            border-radius: 24px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #666;
+            padding: 20px;
+            font-style: italic;
+        }
+
+        /* Collapsible section styles */
+        .collapsible-section {
+            margin-bottom: 20px;
+        }
+
+        .collapsible-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .collapsible-header:hover {
+            background: rgba(0, 212, 255, 0.2);
+            border-color: rgba(0, 212, 255, 0.5);
+        }
+
+        .collapsible-header h3 {
+            margin: 0;
+            border: none;
+            padding: 0;
+        }
+
+        .collapsible-toggle {
+            font-size: 20px;
+            color: #00d4ff;
+            transition: transform 0.3s;
+        }
+
+        .collapsible-toggle.collapsed {
+            transform: rotate(-90deg);
+        }
+
+        .collapsible-content {
+            max-height: 1000px;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+            opacity: 1;
+        }
+
+        .collapsible-content.collapsed {
+            max-height: 0;
+            opacity: 0;
+        }
+
+        .collapsible-content .control-group {
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>0J0 de T0GA</h1>
+        <p class="subtitle">Sistema de Vigilancia Inteligente con IA</p>
+        
+        <div class="main-grid">
+            <div class="controls-panel">
+                <h2>⚙️ Panel de Control</h2>
+                
+                <div class="button-group" style="margin-bottom: 25px;">
+                    <button class="btn-start" id="startBtn" onclick="startStream()">▶️ Start</button>
+                    <button class="btn-stop" id="stopBtn" onclick="stopStream()" disabled>⏹️ Stop</button>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">Stream URL</label>
+                    <input type="text" id="streamUrl" value="http://192.168.1.63:8080/video" placeholder="http://192.168.1.48/capture">
+                    <small style="color: #888; font-size: 11px; display: block; margin-top: 5px;">💡 <strong>Para bajar resolución:</strong> Algunas apps soportan parámetros como <code>?resolution=640x480</code> o <code>?quality=50</code>. Probá agregarlos a la URL manualmente.</small>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">Camera Mode</label>
+                    <select id="cameraMode" style="width: 100%; padding: 12px; border: 2px solid rgba(0, 212, 255, 0.2); border-radius: 8px; font-size: 14px; background: rgba(20, 20, 35, 0.6); color: #e0e0e0;">
+                        <option value="auto">Auto-detect (recommended)</option>
+                        <option value="stream">ESP32CAM / MJPEG Stream</option>
+                        <option value="capture">Webcam IP / Single Capture</option>
+                    </select>
+                    <small style="color: #888; font-size: 12px;">ESP32CAM usa stream continuo, Webcam IP usa captura individual</small>
+                </div>
+
+                <h3>📹 Cámaras Guardadas</h3>
+                <div class="saved-cameras" id="savedCameras">
+                    <!-- Las cámaras guardadas aparecerán aquí -->
+                </div>
+
+                <div class="collapsible-section">
+                    <div class="collapsible-header" onclick="toggleCollapsible('saveCameraSection')">
+                        <h3>⬇️ Guardar cámara</h3>
+                        <span class="collapsible-toggle collapsed" id="saveCameraToggle">▶</span>
+                    </div>
+                    <div class="collapsible-content collapsed" id="saveCameraSection">
+                        <div class="control-group">
+                            <label class="control-label">Nombre de la Cámara</label>
+                            <input type="text" id="cameraName" placeholder="Ej: ESP32CAM Sala" style="margin-bottom: 10px;">
+                            
+                            <label class="control-label">Tipo de Cámara</label>
+                            <select id="savedCameraType" style="margin-bottom: 10px; width: 100%; padding: 12px; border: 2px solid rgba(0, 212, 255, 0.2); border-radius: 8px; background: rgba(20, 20, 35, 0.6); color: #e0e0e0;">
+                                <option value="auto">🔍 Auto-detectar</option>
+                                <option value="stream">📡 ESP32CAM / Stream MJPEG</option>
+                                <option value="capture">📷 Webcam IP / Captura única</option>
+                            </select>
+                            
+                            <label class="control-label">URL del Stream</label>
+                            <input type="text" id="savedUrl" placeholder="http://192.168.1.48/capture" style="margin-bottom: 10px;">
+                            <button class="btn-save" onclick="saveCamera()" style="width: 100%; padding: 10px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Guardar</button>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>🎯 Configuración de Detección</h3>
+
+                <div class="control-group">
+                    <label class="toggle-label">
+                        <span>Detección Facial</span>
+                        <label class="switch">
+                            <input type="checkbox" id="enableFace" checked>
+                            <span class="slider round"></span>
+                        </label>
+                    </label>
+                    <small style="color: #888; font-size: 12px;">Desactivar para mejorar FPS</small>
+                </div>
+
+                <div class="control-group">
+                    <label class="toggle-label">
+                        <span>Detección de Objetos</span>
+                        <label class="switch">
+                            <input type="checkbox" id="enableObject" checked>
+                            <span class="slider round"></span>
+                        </label>
+                    </label>
+                    <small style="color: #888; font-size: 12px;">Desactivar para mejorar FPS</small>
+                </div>
+
+                <div class="control-group">
+                    <label class="control-label">
+                        Confidence Threshold
+                        <span class="control-value" id="confidenceValue">0.50</span>
+                    </label>
+                    <input type="range" id="confidence" min="0.1" max="1.0" step="0.05" value="0.5">
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">
+                        Face Scale Factor
+                        <span class="control-value" id="scaleValue">1.10</span>
+                    </label>
+                    <input type="range" id="scaleFactor" min="1.05" max="2.0" step="0.05" value="1.1">
+                    <small style="color: #666; font-size: 12px;">Lower = more sensitive, slower</small>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">
+                        Min Neighbors
+                        <span class="control-value" id="neighborsValue">5</span>
+                    </label>
+                    <input type="range" id="minNeighbors" min="1" max="10" step="1" value="5">
+                    <small style="color: #666; font-size: 12px;">Higher = less false positives</small>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">
+                        Frame Width
+                        <span class="control-value" id="widthValue">640</span>
+                    </label>
+                    <input type="range" id="frameWidth" min="320" max="1280" step="160" value="640">
+                    <small style="color: #666; font-size: 12px;">Lower = faster processing</small>
+                </div>
+                
+                <h3>⚡ Rendimiento</h3>
+                
+                <div class="control-group">
+                    <label class="control-label">
+                        Target FPS
+                        <span class="control-value" id="fpsValue">15</span>
+                    </label>
+                    <input type="range" id="targetFps" min="5" max="30" step="1" value="15">
+                    <small style="color: #666; font-size: 12px;">Higher = smoother but more delay. Lower = less delay</small>
+                </div>
+                
+                <div class="info-box">
+                    <strong>💡 Tips:</strong><br>
+                    • Apuntá la cámara a una cara para probar detección<br>
+                    • Bajá "Confidence" si no detecta objetos<br>
+                    • Bajá "Frame Width" si el video se traba<br>
+                    • Bajá "Target FPS" para reducir el delay (más cortado)<br>
+                    • Subí "Target FPS" para video más fluido (más delay)<br>
+                    • <strong>ESP32CAM:</strong> Seleccioná "MJPEG Stream" en Camera Mode
+                </div>
+            </div>
+            
+            <div class="video-container">
+                <h2 id="streamTitle">📡 Transmisión Offline</h2>
+                <div class="video-wrapper" style="background: linear-gradient(135deg, #0a0a15 0%, #151525 100%); border: 1px solid rgba(0, 212, 255, 0.3);">
+                    <img id="videoStream" style="display: none;">
+                    <div class="video-placeholder" id="placeholder">
+                        <p style="color: #00d4ff; text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);">⚡ Stream Offline</p>
+                        <p style="font-size: 14px; margin-top: 10px; color: #888;">Initialize the connection to begin</p>
+                    </div>
+                </div>
+                
+                <div class="stats-bar">
+                    <div class="stat">
+                        <div class="stat-value" id="fps">0</div>
+                        <div class="stat-label">FPS</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="faces">0</div>
+                        <div class="stat-label">Faces</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="objects">0</div>
+                        <div class="stat-label">Objects</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="frames">0</div>
+                        <div class="stat-label">Frames</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+        let isRunning = false;
+        
+        // Update slider values display
+        document.getElementById('confidence').addEventListener('input', function() {
+            document.getElementById('confidenceValue').textContent = parseFloat(this.value).toFixed(2);
+            if (isRunning) updateParams();
+        });
+        
+        document.getElementById('scaleFactor').addEventListener('input', function() {
+            document.getElementById('scaleValue').textContent = parseFloat(this.value).toFixed(2);
+            if (isRunning) updateParams();
+        });
+        
+        document.getElementById('minNeighbors').addEventListener('input', function() {
+            document.getElementById('neighborsValue').textContent = this.value;
+            if (isRunning) updateParams();
+        });
+        
+        document.getElementById('frameWidth').addEventListener('input', function() {
+            document.getElementById('widthValue').textContent = this.value;
+            if (isRunning) updateParams();
+        });
+        
+        document.getElementById('targetFps').addEventListener('input', function() {
+            document.getElementById('fpsValue').textContent = this.value;
+            if (isRunning) updateParams();
+        });
+        
+        // Toggle switches - always update params (even when not running)
+        document.getElementById('enableFace').addEventListener('change', function() {
+            updateParams();
+        });
+        
+        document.getElementById('enableObject').addEventListener('change', function() {
+            updateParams();
+        });
+        
+        // Socket events
+        socket.on('connect', function() {
+            console.log('Connected to server');
+        });
+        
+        socket.on('disconnect', function() {
+            console.log('Disconnected from server');
+            isRunning = false;
+            updateButtons();
+        });
+        
+        socket.on('frame', function(data) {
+            const img = document.getElementById('videoStream');
+            const placeholder = document.getElementById('placeholder');
+            
+            img.src = data.image;
+            img.style.display = 'block';
+            placeholder.style.display = 'none';
+            
+            document.getElementById('fps').textContent = data.fps;
+            document.getElementById('faces').textContent = data.faces;
+            document.getElementById('objects').textContent = data.objects;
+            document.getElementById('frames').textContent = data.frame_count;
+        });
+        
+        socket.on('status', function(data) {
+            console.log('Status:', data);
+            if (data.running !== undefined) {
+                isRunning = data.running;
+                updateButtons();
+                
+                const streamTitle = document.getElementById('streamTitle');
+                if (isRunning) {
+                    if (streamTitle) streamTitle.textContent = '📡 Transmisión Online';
+                } else {
+                    document.getElementById('videoStream').style.display = 'none';
+                    document.getElementById('placeholder').style.display = 'block';
+                    if (streamTitle) streamTitle.textContent = '📡 Transmisión Offline';
+                }
+            }
+        });
+        
+        socket.on('params_updated', function(data) {
+            console.log('Parameters updated:', data);
+        });
+        
+        socket.on('error', function(data) {
+            console.error('Error:', data);
+            alert('Error: ' + data.message);
+        });
+        
+        function startStream() {
+            const url = document.getElementById('streamUrl').value;
+            const mode = document.getElementById('cameraMode').value;
+            socket.emit('start', {url: url, mode: mode});
+        }
+        
+        function stopStream() {
+            socket.emit('stop');
+        }
+        
+        function updateParams() {
+            const params = {
+                confidence: parseFloat(document.getElementById('confidence').value),
+                scale_factor: parseFloat(document.getElementById('scaleFactor').value),
+                min_neighbors: parseInt(document.getElementById('minNeighbors').value),
+                frame_width: parseInt(document.getElementById('frameWidth').value),
+                target_fps: parseInt(document.getElementById('targetFps').value),
+                enable_face: document.getElementById('enableFace').checked,
+                enable_object: document.getElementById('enableObject').checked
+            };
+            socket.emit('update_params', params);
+        }
+        
+        function updateButtons() {
+            document.getElementById('startBtn').disabled = isRunning;
+            document.getElementById('stopBtn').disabled = !isRunning;
+        }
+        
+        // Collapsible sections
+        function toggleCollapsible(sectionId) {
+            const content = document.getElementById(sectionId);
+            const toggle = document.getElementById(sectionId.replace('Section', 'Toggle'));
+            
+            if (content.classList.contains('collapsed')) {
+                content.classList.remove('collapsed');
+                toggle.classList.remove('collapsed');
+                toggle.textContent = '▼';
+            } else {
+                content.classList.add('collapsed');
+                toggle.classList.add('collapsed');
+                toggle.textContent = '▶';
+            }
+        }
+        
+        // Saved cameras management
+        const STORAGE_KEY = 'ojodetoga_cameras';
+        
+        function loadSavedCameras() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            return saved ? JSON.parse(saved) : [];
+        }
+        
+        function saveCamera() {
+            const name = document.getElementById('cameraName').value.trim();
+            const url = document.getElementById('savedUrl').value.trim();
+            const type = document.getElementById('savedCameraType').value;
+            
+            if (!name || !url) {
+                alert('Por favor ingresa tanto el nombre como la URL de la cámara');
+                return;
+            }
+            
+            const cameras = loadSavedCameras();
+            
+            // Check if camera with same name already exists
+            const existingIndex = cameras.findIndex(c => c.name === name);
+            if (existingIndex >= 0) {
+                if (confirm(`Ya existe una cámara llamada "${name}". ¿Deseas actualizarla?`)) {
+                    cameras[existingIndex].url = url;
+                    cameras[existingIndex].type = type;
+                } else {
+                    return;
+                }
+            } else {
+                cameras.push({ name, url, type, timestamp: Date.now() });
+            }
+            
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(cameras));
+            
+            // Clear inputs
+            document.getElementById('cameraName').value = '';
+            document.getElementById('savedUrl').value = '';
+            document.getElementById('savedCameraType').value = 'auto';
+            
+            renderSavedCameras();
+            
+            // Collapse the form after saving
+            toggleCollapsible('saveCameraSection');
+        }
+        
+        function deleteCamera(index) {
+            const cameras = loadSavedCameras();
+            cameras.splice(index, 1);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(cameras));
+            renderSavedCameras();
+        }
+        
+        function loadCamera(index) {
+            console.log('Loading camera at index:', index);
+            const cameras = loadSavedCameras();
+            const camera = cameras[index];
+            if (camera) {
+                console.log('Camera found:', camera);
+                const streamUrlInput = document.getElementById('streamUrl');
+                const cameraModeSelect = document.getElementById('cameraMode');
+                
+                if (streamUrlInput) {
+                    streamUrlInput.value = camera.url;
+                    console.log('URL set to:', camera.url);
+                }
+                
+                if (cameraModeSelect) {
+                    // Set camera mode based on saved type
+                    if (camera.type && camera.type !== 'auto') {
+                        cameraModeSelect.value = camera.type;
+                    } else {
+                        // Auto-detect based on URL
+                        if (camera.url.includes('/capture')) {
+                            cameraModeSelect.value = 'capture';
+                        } else if (camera.url.includes('stream') || camera.url.includes('video')) {
+                            cameraModeSelect.value = 'stream';
+                        } else {
+                            cameraModeSelect.value = 'auto';
+                        }
+                    }
+                    console.log('Mode set to:', cameraModeSelect.value);
+                }
+            } else {
+                console.error('Camera not found at index:', index);
+            }
+        }
+        
+        function getCameraTypeIcon(type) {
+            switch(type) {
+                case 'stream': return '📡';
+                case 'capture': return '📷';
+                default: return '🔍';
+            }
+        }
+        
+        function getCameraTypeLabel(type) {
+            switch(type) {
+                case 'stream': return 'Stream';
+                case 'capture': return 'Capture';
+                default: return 'Auto';
+            }
+        }
+        
+        function renderSavedCameras() {
+            const container = document.getElementById('savedCameras');
+            const cameras = loadSavedCameras();
+            
+            if (cameras.length === 0) {
+                container.innerHTML = '<div class="empty-state">No hay cámaras guardadas</div>';
+                return;
+            }
+            
+            container.innerHTML = cameras.map((camera, index) => `
+                <div class="camera-item">
+                    <div class="camera-info">
+                        <div class="camera-name">${getCameraTypeIcon(camera.type)} ${escapeHtml(camera.name)}</div>
+                        <div class="camera-url">${escapeHtml(camera.url)} • ${getCameraTypeLabel(camera.type)}</div>
+                    </div>
+                    <div class="camera-actions">
+                        <button class="btn-load" onclick="event.preventDefault(); event.stopPropagation(); loadCamera(${index}); return false;">Cargar</button>
+                        <button class="btn-delete" onclick="event.preventDefault(); event.stopPropagation(); deleteCamera(${index}); return false;">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Initialize saved cameras on load
+        document.addEventListener('DOMContentLoaded', function() {
+            renderSavedCameras();
+        });
+        
+        // Get initial status
+        socket.emit('get_status');
+    </script>
+</body>
+</html>
