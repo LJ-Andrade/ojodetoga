@@ -89,7 +89,7 @@ def handle_get_status():
 
 
 if __name__ == '__main__':
-    print("🚀 Starting ESP32CAM Web Interface")
-    print("📱 Open http://localhost:5000 in your browser")
-    print("📱 Or http://<your-ip>:5000 from other devices")
-    socketio.run(app, host='0.0.0.0', port=5000, debug=False, allow_unsafe_werkzeug=True)
+    print("Starting ESP32CAM Web Interface")
+    print("Open http://localhost:8080 in your browser")
+    print("Or http://<your-ip>:8080 from other devices")
+    socketio.run(app, host='0.0.0.0', port=8080, debug=False, allow_unsafe_werkzeug=True)
