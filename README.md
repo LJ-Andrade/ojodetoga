@@ -14,7 +14,7 @@ Sistema de Vigilancia Inteligente con IA - Procesador de stream MJPEG desde ESP3
 ## Instalación
 
 ```bash
-cd processing/ojodetoga
+cd ojodetoga
 ./setup.sh
 ```
 
